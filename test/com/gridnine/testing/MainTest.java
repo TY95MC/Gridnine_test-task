@@ -1,7 +1,6 @@
 package com.gridnine.testing;
 
 import com.gridnine.testing.filter.FlightFilter;
-import com.gridnine.testing.filter.FlightFilterImpl;
 import com.gridnine.testing.model.Flight;
 import com.gridnine.testing.model.Segment;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MainTest {
 
-    static FlightFilter filter;
     static List<Flight> data;
     static List<Flight> result;
     static Predicate<Flight> flightPredicate;
@@ -30,7 +28,6 @@ class MainTest {
 
     @BeforeAll
     static void init() {
-        filter = new FlightFilterImpl();
         //flight with 1 segment
         flight1 = createFlight(LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         //flight with 2 segments, interval 30 minutes
@@ -63,7 +60,7 @@ class MainTest {
             }
             return duration <= 90;
         };
-        result = filter.flightFilter(data, flightPredicate);
+        result = FlightFilter.filter(data, flightPredicate);
         assertEquals(1, result.size());
     }
 
@@ -84,7 +81,7 @@ class MainTest {
             }
             return max <= 50;
         };
-        result = filter.flightFilter(data, flightPredicate);
+        result = FlightFilter.filter(data, flightPredicate);
         assertEquals(1, result.size());
     }
 
@@ -92,7 +89,8 @@ class MainTest {
     void shouldFilterSegmentDurationLessThan90MinutesSuccessfully() {
         data = List.of(flight1, flight2, flight3);
         segmentPredicate = segment -> segment.getDepartureDate().plusMinutes(90).isBefore(segment.getArrivalDate());
-        result = filter.segmentFilter(data, segmentPredicate);
+        flightPredicate = flight -> flight.getSegments().stream().noneMatch(segmentPredicate);
+        result = FlightFilter.filter(data, flightPredicate);
         assertEquals(1, result.size());
     }
 
@@ -111,7 +109,7 @@ class MainTest {
             }
             return true;
         };
-        result = filter.flightFilter(data, flightPredicate);
+        result = FlightFilter.filter(data, flightPredicate);
         assertEquals(1, result.size());
     }
 
